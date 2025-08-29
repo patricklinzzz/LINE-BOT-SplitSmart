@@ -12,11 +12,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const form = document.getElementById("bill-form");
       const submitBtn = document.getElementById("submit-btn");
+      const payerSelect = document.getElementById("payer-select");
+      payerSelect.innerHTML = "";
       const context = liff.getContext();
       const userId = context.userId;
 
       if (!groupId) {
-        alert("無法獲取情境資訊，請在群組或一對一聊天中開啟。");
+        alert("無法獲取情境資訊，請在群組中開啟。");
         form.innerHTML = "<p>錯誤：無法獲取情境資訊。</p>";
         submitBtn.disabled = true;
         return;
@@ -44,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           data.members.forEach((member) => {
+            // 參與者勾選
             const div = document.createElement("div");
             div.className = "member-item";
             div.innerHTML = `
@@ -51,7 +54,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <label for="${member.userId}">${member.displayName}</label>
             `;
             form.appendChild(div);
+
+            // 付款人下拉選單
+            const option = document.createElement("option");
+            option.value = member.userId;
+            option.textContent = member.displayName;
+            payerSelect.appendChild(option);
           });
+          payerSelect.value = userId;
         })
         .catch((error) => {
           console.error("獲取成員名單時發生錯誤:", error);
@@ -60,13 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
           submitBtn.disabled = true;
         });
 
-      // 表單送出邏輯
+      // 表單送出
       submitBtn.addEventListener("click", () => {
         const selectedMembers = Array.from(
           document.querySelectorAll('input[name="participants[]"]:checked')
         ).map((checkbox) => checkbox.value);
 
-        const amount = prompt("請輸入總金額：", "1000");
+        const amountInput = document.getElementById("amount-input");
+        const amount = amountInput.value;
+        const payerSelect = document.getElementById("payer-select");
+        const payerId = payerSelect.value;
+
         if (!amount || isNaN(amount) || Number(amount) <= 0) {
           alert("請輸入有效的金額！");
           return;
@@ -77,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             groupId: groupId,
-            payerId: userId,
+            payerId: payerId,
             participants: selectedMembers,
             amount: Number(amount),
           }),

@@ -10,6 +10,24 @@
     body {
       font-family: sans-serif;
       padding: 20px;
+      background-color: #f4f4f9;
+    }
+
+    h1,
+    h3 {
+      color: #333;
+    }
+
+    .form-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
     }
 
     .member-list {
@@ -21,7 +39,7 @@
       align-items: center;
       margin-bottom: 10px;
       padding: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       border-radius: 5px;
     }
 
@@ -32,12 +50,38 @@
     .member-item input[type="checkbox"] {
       margin-right: 10px;
     }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
 <body>
   <h1>新增帳單</h1>
-  <div class="member-list">
+  <div class="form-section">
+    <div class="form-group">
+      <label for="amount-input">總金額</label>
+      <input type="number" id="amount-input" placeholder="請輸入總金額" required>
+    </div>
+    <div class="form-group">
+      <label for="payer-select">付款人</label>
+      <select id="payer-select" required></select>
+    </div>
+  </div>
+  <div class="form-section member-list">
     <h3>請選擇參與分帳的成員</h3>
     <form id="bill-form">
     </form>

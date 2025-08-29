@@ -31,7 +31,7 @@ foreach ($request['events'] as $event) {
 
   if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
     $userMessage = trim($event['message']['text']);
-    $replyMessage = MessageHandler::handleText($userMessage,$groupId, $userId);
+    $replyMessage = MessageHandler::handleText($userMessage,$groupId);
   } else if ($event['type'] == 'postback') {
     $postbackData = $event['postback']['data'];
     $replyMessage = MessageHandler::handlePostback($postbackData, $groupId, $userId);
