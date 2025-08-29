@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新增帳單 - 分帳小幫手</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    .member-list {
+      margin-top: 20px;
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .member-item.selected {
+      background-color: #e0f7fa;
+    }
+
+    .member-item input[type="checkbox"] {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>新增帳單</h1>
+  <div class="member-list">
+    <h3>請選擇參與分帳的成員</h3>
+    <form id="bill-form">
+    </form>
+  </div>
+  <div style="margin-top: 20px;">
+    <button id="submit-btn">確認新增</button>
+  </div>
+
+  <script src="https://bot.patrickzzz.com/liff/liff-form.js" defer></script>
+</body>
+
+</html>
