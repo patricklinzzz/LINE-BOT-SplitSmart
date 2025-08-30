@@ -22,12 +22,31 @@ class Bill
     $stmt->close();
 
     //參與者存入participants資料表
-    if (is_array($data['participants']) && !empty($data['participants'])){
-      foreach ($data['participants'] as $participantUserId){
-        Participant::addParticipant($db,$newBillid,$participantUserId);
+    if (is_array($data['participants']) && !empty($data['participants'])) {
+      foreach ($data['participants'] as $participantUserId) {
+        Participant::addParticipant($db, $newBillid, $participantUserId);
       }
     }
 
     return $newBillid;
+  }
+  // 查詢帳單
+  public static function getBillById($db, $billId)
+  {
+    $sql = "SELECT * FROM bills WHERE bill_id = ? ";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("i", $billId);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+      $bill = $result->fetch_assoc();
+    } else {
+      $bill = null;
+    }
+
+    $stmt->close();
+    return $bill;
   }
 }

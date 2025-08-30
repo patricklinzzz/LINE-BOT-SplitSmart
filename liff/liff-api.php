@@ -6,6 +6,7 @@ require_once __DIR__ . '/../models/Bill.php';
 require_once __DIR__ . '/../models/Participant.php';
 require_once __DIR__ . '/../services/MessageHandler.php';
 require_once __DIR__ . '/../models/DbConnection.php';
+require_once __DIR__ . '/../services/BillService.php';
 
 header('Access-Control-Allow-Origin: https://liff.line.me');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -86,6 +87,9 @@ function handlePostRequest() {
     $billId = Bill::createBill($db, $data);
 
     if ($billId) {
+        $flexMessage = BillService::createBillSummaryFlexMessage($db, $billId);
+        MessageHandler::sendPushMessage($data['groupId'], $flexMessage);
+        // 回傳成功訊息給 LIFF 網頁，讓它關閉
         echo json_encode(['status' => 'success', 'message' => '帳單已成功新增！', 'bill_id' => $billId]);
     } else {
         http_response_code(500);

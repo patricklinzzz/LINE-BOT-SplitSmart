@@ -119,15 +119,13 @@ class MessageHandler
           $db = DbConnection::getInstance();
           $result = Member::registerMember($db, $groupId, $userId);
           $profile = self::getProfile($userId); // 取得使用者資訊
-          $displayName = $profile ? $profile['displayName'] : '使用者'; //取得使用者名稱
+          $displayName = $profile ? $profile['displayName'] : '使用者'; 
           return [
             'type' => 'text',
             'text' => $result ? $displayName . " 加入成功！" : $displayName . " 已經加入過了。"
           ];
         } catch (Exception $e) {
-          // 將詳細的技術錯誤記錄到伺服器日誌，方便開發者除錯
           error_log('Error in register_member postback: ' . $e->getMessage());
-          // 回傳一個通用的錯誤訊息給使用者，避免程式崩潰
           return [
             'type' => 'text',
             'text' => '請在群組內使用。'
@@ -152,7 +150,7 @@ class MessageHandler
   {
     if (!defined('LINE_CHANNEL_ACCESS_TOKEN') || empty(LINE_CHANNEL_ACCESS_TOKEN)) {
       error_log('LINE_CHANNEL_ACCESS_TOKEN is not defined or empty.');
-      return null; // 返回 null 表示失敗
+      return null;
     }
 
     $url = "https://api.line.me/v2/bot/profile/" . urlencode($userId);
@@ -183,5 +181,27 @@ class MessageHandler
     }
 
     return $profile;
+  }
+  public static function sendPushMessage($groupId, $flexMessage)
+  {
+    require_once __DIR__ . '/../config/linebot.php';
+
+    $replyData = [
+      'to' => $groupId,
+      'messages' => [$flexMessage]
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://api.line.me/v2/bot/message/push');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($replyData));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'Content-Type: application/json',
+      'Authorization: Bearer ' . LINE_CHANNEL_ACCESS_TOKEN
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
   }
 }
