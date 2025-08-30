@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const submitBtn = document.getElementById("submit-btn");
       const payerSelect = document.getElementById("payer-select");
       payerSelect.innerHTML = "";
+
       const context = liff.getContext();
       const userId = context.userId;
 
@@ -76,6 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
           document.querySelectorAll('input[name="participants[]"]:checked')
         ).map((checkbox) => checkbox.value);
 
+        const billNameInput = document.getElementById("bill-name");
+        const billName = billNameInput.value;
         const amountInput = document.getElementById("amount-input");
         const amount = amountInput.value;
         const payerSelect = document.getElementById("payer-select");
@@ -90,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            billName: billName,
             groupId: groupId,
             payerId: payerId,
             participants: selectedMembers,

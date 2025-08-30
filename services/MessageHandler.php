@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config/linebot.php';
 
 class MessageHandler
 {
+  // 處理文字訊息
   public static function handleText($userMessage, $groupId)
   {
     $liffBaseUrl = 'https://liff.line.me/2008005425-w5zrAGqk';
@@ -109,6 +110,7 @@ class MessageHandler
       ];
     }
   }
+  // 處理postback
   public static function handlePostback($data, $groupId, $userId)
   {
     switch ($data) {

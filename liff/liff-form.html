@@ -58,7 +58,7 @@
       color: #555;
     }
 
-    input[type="number"],
+    input[type="text"],input[type="number"],
     select {
       width: 100%;
       padding: 10px;
@@ -73,6 +73,8 @@
   <h1>新增帳單</h1>
   <div class="form-section">
     <div class="form-group">
+      <label for="bill-name">帳單名稱</label>
+      <input type="text" id="bill-name" placeholder="請輸入帳單名稱" required>
       <label for="amount-input">總金額</label>
       <input type="number" id="amount-input" placeholder="請輸入總金額" required>
     </div>
