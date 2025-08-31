@@ -119,7 +119,7 @@ class MessageHandler
           $db = DbConnection::getInstance();
           $result = Member::registerMember($db, $groupId, $userId);
           $profile = self::getProfile($userId); // 取得使用者資訊
-          $displayName = $profile ? $profile['displayName'] : '使用者'; 
+          $displayName = $profile ? $profile['displayName'] : '使用者';
           return [
             'type' => 'text',
             'text' => $result ? $displayName . " 加入成功！" : $displayName . " 已經加入過了。"
@@ -133,10 +133,28 @@ class MessageHandler
         }
 
       case 'get_balance':
-        return [
-          'type' => 'text',
-          'text' => '「結算」功能正在開發中，敬請期待！'
-        ];
+        try {
+          $db = DbConnection::getInstance();
+          $report = BillService::getFinalBalance($db, $groupId);
+
+          // 檢查是否有帳務資料可供結算
+          if (empty($report['balances']) && empty($report['transactions'])) {
+            return [
+              'type' => 'text',
+              'text' => '目前沒有任何帳單可以結算。'
+            ];
+          }
+
+          // 產生結算報告 Flex Message
+          $reportMessage = BillService::createBalanceReportFlexMessage($report);
+          return $reportMessage;
+        } catch (Exception $e) {
+          error_log('Error in get_balance postback: ' . $e->getMessage());
+          return [
+            'type' => 'text',
+            'text' => '結算時發生錯誤，請稍後再試或聯絡管理員。'
+          ];
+        }
 
       default:
         return [
@@ -145,7 +163,7 @@ class MessageHandler
         ];
     }
   }
-  //取得使用者
+  // 取得使用者
   public static function getProfile($userId)
   {
     if (!defined('LINE_CHANNEL_ACCESS_TOKEN') || empty(LINE_CHANNEL_ACCESS_TOKEN)) {
@@ -182,6 +200,7 @@ class MessageHandler
 
     return $profile;
   }
+  // 新增帳單後，傳送明細到群組
   public static function sendPushMessage($groupId, $flexMessage)
   {
     require_once __DIR__ . '/../config/linebot.php';
