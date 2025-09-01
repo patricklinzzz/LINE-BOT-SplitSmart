@@ -67,12 +67,12 @@ class BillService
   // 結算
   public static function getFinalBalance($db, $groupId)
   {
-    $balance = []; // 儲存每個人應收或應付的金額
+    $balances = []; // 儲存每個人應收或應付的金額
 
     $sql = "SELECT b.bill_id, b.total_amount, b.payer_user_id, p.user_id AS participant_user_id
                 FROM bills b
                 JOIN bill_participants p ON b.bill_id = p.bill_id
-                WHERE b.group_id = ?";
+                WHERE b.group_id = ? AND b.is_settled = FALSE";
     $stmt = $db->prepare($sql);
     $stmt->bind_param("s", $groupId);
     $stmt->execute();
@@ -131,16 +131,16 @@ class BillService
   public static function createBalanceReportFlexMessage($report)
   {
     $contents = [];
-    $hasBalance = false;
-    foreach ($report as $userId => $balance) {
+    // $hasBalance = false;
+    foreach ($report as $userId => $balances) {
       // 忽略餘額為零的使用者，避免訊息冗長
-      if (abs($balance) > 0.01) {
-        $hasBalance = true;
+      // if (abs($balances) > 0.01) {
+        // $hasBalance = true;
         $profile = MessageHandler::getProfile($userId);
         $userName = $profile['displayName'] ?? '未知用戶';
-        $color = $balance > 0 ? '#1DB446' : '#EF4444';
-        $sign = $balance > 0 ? '應收' : '應付';
-        $amount = abs($balance);
+        $color = $balances > 0 ? '#1DB446' : '#EF4444';
+        $sign = $balances > 0 ? '應收' : '應付';
+        $amount = abs($balances);
 
         $contents[] = [
           'type' => 'box',
@@ -152,14 +152,29 @@ class BillService
           ]
         ];
         $contents[] = ['type' => 'separator', 'margin' => 'sm'];
-      }
+      // }
     }
 
     // 如果有餘額，移除最後一條分隔線
-    if ($hasBalance) {
-      array_pop($contents);
-    } else {
-      $contents[] = ['type' => 'text', 'text' => '目前沒有待結算的帳單。', 'align' => 'center'];
+    // if ($hasBalance) {
+    //   array_pop($contents);
+    // } else {
+    //   $contents[] = ['type' => 'text', 'text' => '目前沒有待結算的帳單。', 'align' => 'center'];
+    // }
+
+    $buttons = [];
+    if (!empty($report)) {
+      $buttons[] = [
+        'type' => 'button',
+        'style' => 'link',
+        'height' => 'sm',
+        'action' => [
+          'type' => 'postback',
+          'label' => '✔️ 確認結算並清除紀錄',
+          'data' => 'settle_up',
+          'displayText' => '所有帳單已成功結清！'
+        ]
+      ];
     }
 
     $flexMessage = [
@@ -174,6 +189,11 @@ class BillService
           ],
           $contents
         )
+      ],
+      'footer' => [
+        'type' => 'box',
+        'layout' => 'vertical',
+        'contents' => $buttons
       ]
     ];
 
@@ -182,5 +202,18 @@ class BillService
       'altText' => '結算報告',
       'contents' => $flexMessage
     ];
+  }
+  // 修改帳單結算後狀態
+  public static function settleBills($db, $groupId)
+  {
+    $sql = "UPDATE bills SET is_settled = TRUE WHERE group_id = ? AND is_settled = FALSE";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $groupId);
+    $stmt->execute();
+
+    $stmt->close();
+
+    return $stmt->affected_rows;
   }
 }

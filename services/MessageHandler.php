@@ -14,87 +14,128 @@ class MessageHandler
     $fullLiffUrl = $liffBaseUrl . '?groupId=' . urlencode($groupId);
     if ($userMessage === '功能') {
       $flexMessageJson = '{
-        "type": "bubble",
-        "size": "micro",
-        "header": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "💵 分帳小幫手",
-                    "weight": "bold",
-                    "align": "center",
-                    "size": "20px"
-                }
-            ],
-            "backgroundColor": "#c8e1ef66",
-            "alignItems": "center",
-            "justifyContent": "center"
-        },
-        "body": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "所有成員\n首次使用需點擊\n⬇️",
-                    "weight": "regular",
-                    "style": "normal",
-                    "align": "center",
-                    "wrap": true,
-                    "size": "sm",
-                    "offsetBottom": "-8px"
-                },
-                {
-                    "type": "button",
-                    "action": {
-                        "type": "postback",
-                        "label": "成為分母++",
-                        "data": "register_member"
-                    },
-                    "height": "md",
-                    "style": "link",
-                    "color": "#155e75"
-                },
-                {
-                    "type": "button",
-                    "action": {
-                        "type": "uri",
-                        "label": "新增帳單",
-                        "uri": "' . $fullLiffUrl . '"
-                    },
-                    "height": "sm",
-                    "style": "primary",
-                    "color": "#06b6d4"
-                },
-                {
-                    "type": "button",
-                    "action": {
-                        "type": "postback",
-                        "label": "結算",
-                        "data": "get_balance"
-                    },
-                    "style": "primary",
-                    "color": "#ef4444",
-                    "height": "sm",
-                    "offsetTop": "5px",
-                    "offsetBottom": "5px"
-                }
-            ],
-            "backgroundColor": "#c8e1ef",
-            "spacing": "none",
-            "margin": "none",
-            "borderWidth": "none",
-            "cornerRadius": "none"
-        },
-        "styles": {
-            "body": {
-                "separator": true,
-                "separatorColor": "#00000055"
-            }
+  "type": "bubble",
+  "size": "deca",
+  "header": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "分帳小幫手",
+        "weight": "bold",
+        "size": "xxl",
+        "align": "center",
+        "color": "#333333"
+      }
+    ],
+    "justifyContent": "center",
+    "alignItems": "center"
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "「 點擊加入，開始分帳 」",
+        "align": "center",
+        "color": "#888888",
+        "size": "md",
+        "weight": "bold",
+        "offsetTop": "8px"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "👤 加入名單 ",
+            "size": "sm",
+            "align": "center",
+            "color": "#6fa8dc",
+            "weight": "bold"
+          }
+        ],
+        "width": "120px",
+        "borderWidth": "medium",
+        "borderColor": "#6fa8dc",
+        "cornerRadius": "xxl",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "height": "30px",
+        "margin": "md",
+        "action": {
+          "type": "postback",
+          "label": "action",
+          "data": "register_member"
         }
-    }';
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "新增帳單",
+                "color": "#FFFFFF",
+                "weight": "bold",
+                "size": "lg"
+              }
+            ],
+            "backgroundColor": "#2c3e50",
+            "width": "180px",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "cornerRadius": "md",
+            "height": "40px",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "' . $fullLiffUrl . '"
+            }
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "結算",
+                "color": "#FFFFFF",
+                "size": "lg",
+                "weight": "bold"
+              }
+            ],
+            "backgroundColor": "#00a8a8",
+            "width": "180px",
+            "height": "40px",
+            "cornerRadius": "md",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "action": {
+              "type": "postback",
+              "label": "action",
+              "data": "get_balance"
+            }
+          }
+        ],
+        "height": "120px",
+        "justifyContent": "flex-end",
+        "spacing": "lg"
+      }
+    ],
+    "alignItems": "center",
+    "justifyContent": "center",
+    "spacing": "md",
+    "backgroundColor": "#eff2f6"
+  }
+}';
 
       $flexMessageArray = json_decode($flexMessageJson, true);
 
@@ -138,12 +179,12 @@ class MessageHandler
           $report = BillService::getFinalBalance($db, $groupId);
 
           // 檢查是否有帳務資料可供結算
-          if (empty($report['balances']) && empty($report['transactions'])) {
-            return [
-              'type' => 'text',
-              'text' => '目前沒有任何帳單可以結算。'
-            ];
-          }
+          // if (empty($report['balances']) && empty($report['transactions'])) {
+          //   return [
+          //     'type' => 'text',
+          //     'text' => '目前沒有任何帳單可以結算。'
+          //   ];
+          // }
 
           // 產生結算報告 Flex Message
           $reportMessage = BillService::createBalanceReportFlexMessage($report);
@@ -155,6 +196,15 @@ class MessageHandler
             'text' => '結算時發生錯誤，請稍後再試或聯絡管理員。'
           ];
         }
+
+      case 'settle_up':
+        $db = DbConnection::getInstance();
+        BillService::settleBills($db, $groupId);
+
+        return [
+          'type' => 'text',
+          'text' => '帳單已成功結算！'
+        ];
 
       default:
         return [
