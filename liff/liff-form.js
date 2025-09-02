@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const liffId = "2008005425-w5zrAGqk";
-  const urlParams = new URLSearchParams(window.location.search);
-  const groupId = urlParams.get("groupId");
+
   liff
     .init({ liffId })
     .then(() => {
@@ -10,6 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const groupId = urlParams.get("groupId");
+      
       const form = document.getElementById("bill-form");
       const submitBtn = document.getElementById("submit-btn");
       const payerSelect = document.getElementById("payer-select");
@@ -93,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            action:"add_bill",
             billName: billName,
             groupId: groupId,
             payerId: payerId,

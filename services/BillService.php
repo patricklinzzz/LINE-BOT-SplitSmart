@@ -216,4 +216,70 @@ class BillService
 
     return $stmt->affected_rows;
   }
+  //獲取群組帳單
+  public static function getBillsForGroup($db, $groupId)
+  {
+    $sql = "SELECT b.bill_id, b.bill_name, b.total_amount, b.payer_user_id, p.user_id AS participant_user_id
+            FROM bills b
+            LEFT JOIN bill_participants p ON b.bill_id = p.bill_id
+            WHERE b.group_id = ? AND b.is_settled = FALSE
+            ORDER BY b.created_at DESC";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("s", $groupId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $bills = [];
+    $userIds = [];
+    while ($row = $result->fetch_assoc()) {
+      $billId = $row['bill_id'];
+      if (!isset($bills[$billId])) {
+        $bills[$billId] = [
+          'bill_id' => $billId,
+          'bill_name' => $row['bill_name'],
+          'total_amount' => $row['total_amount'],
+          'payer_user_id' => $row['payer_user_id'],
+          'participants_user_ids' => []
+        ];
+        $userIds[$row['payer_user_id']] = true;
+      }
+      if ($row['participant_user_id']) {
+        $bills[$billId]['participants_user_ids'][] = $row['participant_user_id'];
+        $userIds[$row['participant_user_id']] = true; 
+      }
+    }
+    $stmt->close();
+
+    $profiles = self::getProfilesForUserIds(array_keys($userIds));
+
+    $response = [];
+    foreach ($bills as $bill) {
+      $participantNames = [];
+      foreach ($bill['participants_user_ids'] as $pId) {
+        $participantNames[] = $profiles[$pId]['displayName'] ?? '未知用戶';
+      }
+
+      $response[] = [
+        'bill_id' => $bill['bill_id'],
+        'bill_name' => $bill['bill_name'],
+        'total_amount' => $bill['total_amount'],
+        'payer_name' => $profiles[$bill['payer_user_id']]['displayName'] ?? '未知用戶',
+        'participants_names' => $participantNames
+      ];
+    }
+
+    return $response;
+  }
+  // 獲取用戶名稱
+  private static function getProfilesForUserIds(array $userIds)
+  {
+    $profiles = [];
+    foreach ($userIds as $userId) {
+      $profile = MessageHandler::getProfile($userId);
+      if ($profile) {
+        $profiles[$userId] = $profile;
+      }
+    }
+    return $profiles;
+  }
 }

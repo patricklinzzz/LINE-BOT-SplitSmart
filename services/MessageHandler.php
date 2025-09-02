@@ -10,95 +10,40 @@ class MessageHandler
   // 處理文字訊息
   public static function handleText($userMessage, $groupId)
   {
-    $liffBaseUrl = 'https://liff.line.me/2008005425-w5zrAGqk';
-    $fullLiffUrl = $liffBaseUrl . '?groupId=' . urlencode($groupId);
-    if ($userMessage === '功能') {
+    $fullLiffUrl_add = 'https://liff.line.me/2008005425-w5zrAGqk' . '?groupId=' . urlencode($groupId);
+    $fullLiffUrl_get = 'https://liff.line.me/2008005425-9w3Ydy41' . '?groupId=' . urlencode($groupId);
+    if ($userMessage === '/分帳') {
       $flexMessageJson = '{
-  "type": "bubble",
-  "size": "deca",
-  "header": {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
-      {
-        "type": "text",
-        "text": "分帳小幫手",
-        "weight": "bold",
-        "size": "xxl",
-        "align": "center",
-        "color": "#333333"
-      }
-    ],
-    "justifyContent": "center",
-    "alignItems": "center"
-  },
-  "body": {
-    "type": "box",
-    "layout": "vertical",
-    "contents": [
-      {
-        "type": "text",
-        "text": "「 點擊加入，開始分帳 」",
-        "align": "center",
-        "color": "#888888",
-        "size": "md",
-        "weight": "bold",
-        "offsetTop": "8px"
-      },
-      {
+      "type": "bubble",
+      "size": "deca",
+      "header": {
         "type": "box",
         "layout": "vertical",
         "contents": [
           {
             "type": "text",
-            "text": "👤 加入名單 ",
-            "size": "sm",
+            "text": "分帳小幫手",
+            "weight": "bold",
+            "size": "xxl",
             "align": "center",
-            "color": "#6fa8dc",
-            "weight": "bold"
+            "color": "#333333"
           }
         ],
-        "width": "120px",
-        "borderWidth": "medium",
-        "borderColor": "#6fa8dc",
-        "cornerRadius": "xxl",
         "justifyContent": "center",
-        "alignItems": "center",
-        "height": "30px",
-        "margin": "md",
-        "action": {
-          "type": "postback",
-          "label": "action",
-          "data": "register_member"
-        }
+        "alignItems": "center"
       },
-      {
+      "body": {
         "type": "box",
         "layout": "vertical",
         "contents": [
           {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-              {
-                "type": "text",
-                "text": "新增帳單",
-                "color": "#FFFFFF",
-                "weight": "bold",
-                "size": "lg"
-              }
-            ],
-            "backgroundColor": "#2c3e50",
-            "width": "180px",
-            "justifyContent": "center",
-            "alignItems": "center",
-            "cornerRadius": "md",
-            "height": "40px",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "' . $fullLiffUrl . '"
-            }
+            "type": "text",
+            "text": "「 點擊加入，開始分帳 」",
+            "align": "center",
+            "color": "#888888",
+            "size": "md",
+            "weight": "bold",
+            "offsetTop": "8px"
           },
           {
             "type": "box",
@@ -106,36 +51,115 @@ class MessageHandler
             "contents": [
               {
                 "type": "text",
-                "text": "結算",
-                "color": "#FFFFFF",
-                "size": "lg",
+                "text": "👤 加入名單 ",
+                "size": "sm",
+                "align": "center",
+                "color": "#6fa8dc",
                 "weight": "bold"
               }
             ],
-            "backgroundColor": "#00a8a8",
-            "width": "180px",
-            "height": "40px",
-            "cornerRadius": "md",
+            "width": "120px",
+            "borderWidth": "medium",
+            "borderColor": "#6fa8dc",
+            "cornerRadius": "xxl",
             "justifyContent": "center",
             "alignItems": "center",
+            "height": "30px",
+            "margin": "md",
             "action": {
               "type": "postback",
               "label": "action",
-              "data": "get_balance"
+              "data": "register_member"
             }
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "＋ 新增帳單",
+                    "color": "#FFFFFF",
+                    "weight": "bold",
+                    "size": "lg"
+                  }
+                ],
+                "backgroundColor": "#2c3e50",
+                "width": "180px",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "cornerRadius": "md",
+                "height": "40px",
+                "action": {
+                  "type": "uri",
+                  "label": "action",
+                  "uri": "' . $fullLiffUrl_add . '"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "🔍查看帳單",
+                    "color": "#FFFFFF",
+                    "weight": "bold",
+                    "size": "lg"
+                  }
+                ],
+                "backgroundColor": "#6fa8dc",
+                "width": "180px",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "cornerRadius": "md",
+                "height": "40px",
+                "action": {
+                  "type": "uri",
+                  "label": "action",
+                  "uri": "' . $fullLiffUrl_get . '"
+                }
+              },
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "✅結算",
+                    "color": "#FFFFFF",
+                    "size": "lg",
+                    "weight": "bold"
+                  }
+                ],
+                "backgroundColor": "#00a8a8",
+                "width": "180px",
+                "height": "40px",
+                "cornerRadius": "md",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "action": {
+                  "type": "postback",
+                  "label": "action",
+                  "data": "get_balance"
+                }
+              }
+            ],
+            "height": "160px",
+            "justifyContent": "flex-end",
+            "spacing": "lg"
           }
         ],
-        "height": "120px",
-        "justifyContent": "flex-end",
-        "spacing": "lg"
+        "alignItems": "center",
+        "justifyContent": "center",
+        "spacing": "md",
+        "backgroundColor": "#eff2f6"
       }
-    ],
-    "alignItems": "center",
-    "justifyContent": "center",
-    "spacing": "md",
-    "backgroundColor": "#eff2f6"
-  }
-}';
+    }';
 
       $flexMessageArray = json_decode($flexMessageJson, true);
 
@@ -145,10 +169,7 @@ class MessageHandler
         'contents' => $flexMessageArray
       ];
     } else {
-      return [
-        'type' => 'text',
-        'text' => '你好！我是分帳小幫手。請輸入「功能」來查看選單。'
-      ];
+      return null;
     }
   }
   // 處理postback

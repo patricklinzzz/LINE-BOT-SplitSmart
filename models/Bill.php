@@ -49,4 +49,32 @@ class Bill
     $stmt->close();
     return $bill;
   }
+  // 刪除帳單
+  public static function deleteBill($db, $billId)
+  {
+    $success = false;
+    $db->begin_transaction();
+
+    try {
+      // 刪除參與者紀錄
+      $stmtParticipants = $db->prepare("DELETE FROM bill_participants WHERE bill_id = ?");
+      $stmtParticipants->bind_param("i", $billId);
+      $stmtParticipants->execute();
+      $stmtParticipants->close();
+
+      // 刪除帳單
+      $stmtBill = $db->prepare("DELETE FROM bills WHERE bill_id = ?");
+      $stmtBill->bind_param("i", $billId);
+      $stmtBill->execute();
+      $success = $stmtBill->affected_rows > 0; 
+      $stmtBill->close();
+
+      $db->commit();
+      return $success;
+    } catch (Exception $e) {
+      $db->rollback();
+      error_log("刪除帳單失敗 (ID: {$billId}): " . $e->getMessage());
+      return false;
+    }
+  }
 }

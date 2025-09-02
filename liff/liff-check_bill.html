@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>查詢帳單 - 分帳小幫手</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background-color: #f0f2f5;
+      color: #1c1e21;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #loading,
+    #no-bills {
+      text-align: center;
+      color: #666;
+      padding: 20px;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .bill-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .bill-table th,
+    .bill-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .bill-table th {
+      background-color: #f7f7f7;
+      font-weight: 600;
+    }
+
+    .bill-table td strong {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .participants {
+      font-size: 12px;
+      color: #666;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .actions button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 5px;
+      color: white;
+    }
+
+    .btn-edit {
+      background-color: #1877f2;
+    }
+
+    .btn-delete {
+      background-color: #e74c3c;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>歷史帳單紀錄</h1>
+    <div id="loading">載入中...</div>
+    <div class="table-container">
+      <table class="bill-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>帳單詳情</th>
+            <th>金額</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="bill-list">
+
+        </tbody>
+      </table>
+    </div>
+    <div id="no-bills" style="display:none;">目前沒有任何未結算的帳單。</div>
+  </div>
+
+  <script src="liff-check_bill.js" defer></script>
+</body>
+
+</html>
