@@ -50,8 +50,14 @@ class Bill
     return $bill;
   }
   // 刪除帳單
-  public static function deleteBill($db, $billId)
+  public static function deleteBill($db, $billId, $deleterUserId)
   {
+    $bill = self::getBillById($db, $billId);
+    if (!$bill) {
+      error_log("Attempted to delete a non-existent bill (ID: {$billId})");
+      return false; 
+    }
+
     $success = false;
     $db->begin_transaction();
 
@@ -65,16 +71,28 @@ class Bill
       // 刪除帳單
       $stmtBill = $db->prepare("DELETE FROM bills WHERE bill_id = ?");
       $stmtBill->bind_param("i", $billId);
-      $stmtBill->execute();
-      $success = $stmtBill->affected_rows > 0; 
+      $stmtBill->execute(); 
+      $success = $stmtBill->affected_rows > 0;
       $stmtBill->close();
 
       $db->commit();
-      return $success;
+
+      if ($success) {
+        $deleter = MessageHandler::getProfile($deleterUserId);
+        $deleterName = $deleter['displayName'];
+        $message = "{$deleterName} 刪除了帳單 \"{$bill['bill_name']}\"";
+        $flexMessage = [
+          'type' => 'text',
+          'text' => $message,
+        ];
+        MessageHandler::sendPushMessage($bill['group_id'],$flexMessage);
+        error_log("模擬通知 -> 群組ID {$bill['group_id']}: {$message}"); // 暫時用日誌模擬
+      }
     } catch (Exception $e) {
       $db->rollback();
       error_log("刪除帳單失敗 (ID: {$billId}): " . $e->getMessage());
       return false;
     }
+    return $success;
   }
 }

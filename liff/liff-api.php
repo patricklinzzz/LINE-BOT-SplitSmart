@@ -108,7 +108,7 @@ function handlePostRequest() {
                 echo json_encode(['status' => 'error', 'message' => '缺少帳單 ID']);
                 return;
             }
-            $success = Bill::deleteBill($db, $data['bill_id']);
+            $success = Bill::deleteBill($db, $data['bill_id'],$data['deleter']);
             if ($success) {
                 echo json_encode(['status' => 'success', 'message' => '帳單已刪除']);
             } else {

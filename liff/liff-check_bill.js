@@ -12,12 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const urlParams = new URLSearchParams(window.location.search);
       const groupId = urlParams.get("groupId");
 
+      const context = liff.getContext();
+      const userId = context.userId;
+
       if (!groupId) {
         document.getElementById("loading").textContent = "錯誤：缺少群組資訊。";
         return;
       }
 
-      fetchBills(groupId);
+      fetchBills(groupId,userId);
     })
     .catch((err) => {
       console.error("LIFF Initialization failed", err);
@@ -25,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function fetchBills(groupId) {
+function fetchBills(groupId,userId) {
   const loadingDiv = document.getElementById("loading");
   const table = document.querySelector(".bill-table");
   const noBillsDiv = document.getElementById("no-bills");
@@ -83,7 +86,7 @@ function fetchBills(groupId) {
       tbody.querySelectorAll(".btn-delete").forEach((button) => {
         button.addEventListener("click", (e) => {
           if (confirm("確定要刪除這筆帳單嗎？"))
-            deleteBill(e.target.dataset.billId, e.target);
+            deleteBill(e.target.dataset.billId, e.target,userId);
         });
       });
     })
@@ -93,11 +96,11 @@ function fetchBills(groupId) {
     });
 }
 
-function deleteBill(billId, buttonElement) {
+function deleteBill(billId, buttonElement,userId) {
   fetch("../liff/liff-api.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "delete_bill", bill_id: billId }),
+    body: JSON.stringify({ action: "delete_bill", bill_id: billId ,deleter: userId}),
   })
     .then((response) =>
       response.ok
