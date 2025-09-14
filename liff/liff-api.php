@@ -72,6 +72,22 @@ function handleGetRequest() {
             echo json_encode(['bills' => $bills]);
             break;
 
+        case 'get_bill_details':
+            $billId = $_GET['billId'] ?? '';
+            if (empty($billId)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => '缺少帳單 ID']);
+                return;
+            }
+            $billDetails = BillService::getBillDetails($db, $billId);
+            if ($billDetails) {
+                echo json_encode(['bill' => $billDetails]);
+            } else {
+                http_response_code(404);
+                echo json_encode(['status' => 'error', 'message' => '找不到指定的帳單']);
+            }
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['status' => 'error', 'message' => '無效的 GET 操作']);
@@ -93,12 +109,29 @@ function handlePostRequest() {
             }
             $billId = Bill::createBill($db, $data);
             if ($billId) {
-                $flexMessage = BillService::createBillSummaryFlexMessage($db, $billId);
+                $flexMessage = BillService::createBillSummaryFlexMessage($db, $billId, false);
                 MessageHandler::sendPushMessage($data['groupId'], $flexMessage);
                 echo json_encode(['status' => 'success', 'message' => '帳單已成功新增！', 'bill_id' => $billId]);
             } else {
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => '新增帳單失敗']);
+            }
+            break;
+
+        case 'update_bill':
+            if (empty($data['billId']) || empty($data['groupId']) || empty($data['payerId']) || !isset($data['participants']) || empty($data['amount'])) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => '缺少必要的帳單更新資料']);
+                return;
+            }
+            $success = Bill::updateBill($db, $data);
+            if ($success) {
+                $flexMessage = BillService::createBillSummaryFlexMessage($db, $data['billId'], true);
+                MessageHandler::sendPushMessage($data['groupId'], $flexMessage);
+                echo json_encode(['status' => 'success', 'message' => '帳單已成功更新！']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => '更新帳單失敗']);
             }
             break;
 

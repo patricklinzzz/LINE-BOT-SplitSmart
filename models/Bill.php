@@ -49,6 +49,46 @@ class Bill
     $stmt->close();
     return $bill;
   }
+  // 更新帳單
+  public static function updateBill($db, $data)
+  {
+    $db->begin_transaction();
+
+    try {
+      // 1. 更新帳單主體
+      $sql = "UPDATE bills SET total_amount = ?, bill_name = ?, payer_user_id = ? WHERE bill_id = ?";
+      $stmt = $db->prepare($sql);
+      $stmt->bind_param("dssi", $data['amount'], $data['billName'], $data['payerId'], $data['billId']);
+      if (!$stmt->execute()) {
+        throw new Exception('更新帳單失敗: ' . $stmt->error);
+      }
+      $stmt->close();
+
+      // 2. 刪除舊的參與者
+      $stmtDelete = $db->prepare("DELETE FROM bill_participants WHERE bill_id = ?");
+      $stmtDelete->bind_param("i", $data['billId']);
+      if (!$stmtDelete->execute()) {
+        throw new Exception('刪除舊參與者失敗: ' . $stmtDelete->error);
+      }
+      $stmtDelete->close();
+
+      // 3. 新增新的參與者
+      if (is_array($data['participants']) && !empty($data['participants'])) {
+        foreach ($data['participants'] as $participantUserId) {
+          if (!Participant::addParticipant($db, $data['billId'], $participantUserId)) {
+            throw new Exception('新增新參與者失敗 ' . $participantUserId);
+          }
+        }
+      }
+
+      $db->commit();
+      return true;
+    } catch (Exception $e) {
+      $db->rollback();
+      error_log('更新帳單失敗 (ID: ' . $data['billId'] . '): ' . $e->getMessage());
+      return false;
+    }
+  }
   // 刪除帳單
   public static function deleteBill($db, $billId, $deleterUserId)
   {

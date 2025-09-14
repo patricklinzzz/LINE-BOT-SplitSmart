@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      fetchBills(groupId,userId);
+      fetchBills(groupId, userId);
     })
     .catch((err) => {
       console.error("LIFF Initialization failed", err);
@@ -28,13 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function fetchBills(groupId,userId) {
+function fetchBills(groupId, userId) {
   const loadingDiv = document.getElementById("loading");
   const table = document.querySelector(".bill-table");
   const noBillsDiv = document.getElementById("no-bills");
   const tbody = document.getElementById("bill-list");
 
-  fetch(`https://bot.patrickzzz.com/liff/liff-api.php?action=get_bills&groupId=${groupId}`)
+  fetch(
+    `https://bot.patrickzzz.com/liff/liff-api.php?action=get_bills&groupId=${groupId}`
+  )
     .then((response) => {
       if (!response.ok)
         throw new Error(`API 請求失敗，狀態碼: ${response.status}`);
@@ -49,7 +51,7 @@ function fetchBills(groupId,userId) {
       }
 
       table.style.display = "table";
-      tbody.innerHTML = ""; 
+      tbody.innerHTML = "";
 
       data.bills.forEach((bill) => {
         const row = document.createElement("tr");
@@ -78,15 +80,16 @@ function fetchBills(groupId,userId) {
 
       // 為按鈕加上事件監聽
       tbody.querySelectorAll(".btn-edit").forEach((button) => {
-        button.addEventListener("click", (e) =>
-          alert(`修改功能開發中 (帳單 ID: ${e.target.dataset.billId})`)
-        );
+        button.addEventListener("click", (e) => {
+          const billId = e.target.dataset.billId;
+          window.location.href = `liff-form.html?groupId=${groupId}&billId=${billId}`;
+        });
       });
 
       tbody.querySelectorAll(".btn-delete").forEach((button) => {
         button.addEventListener("click", (e) => {
           if (confirm("確定要刪除這筆帳單嗎？"))
-            deleteBill(e.target.dataset.billId, e.target,userId);
+            deleteBill(e.target.dataset.billId, e.target, userId);
         });
       });
     })
@@ -96,11 +99,15 @@ function fetchBills(groupId,userId) {
     });
 }
 
-function deleteBill(billId, buttonElement,userId) {
+function deleteBill(billId, buttonElement, userId) {
   fetch("../liff/liff-api.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "delete_bill", bill_id: billId ,deleter: userId}),
+    body: JSON.stringify({
+      action: "delete_bill",
+      bill_id: billId,
+      deleter: userId,
+    }),
   })
     .then((response) =>
       response.ok

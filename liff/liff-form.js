@@ -11,11 +11,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const urlParams = new URLSearchParams(window.location.search);
       const groupId = urlParams.get("groupId");
-      
+      const billId = urlParams.get("billId");
+
       const form = document.getElementById("bill-form");
       const submitBtn = document.getElementById("submit-btn");
       const payerSelect = document.getElementById("payer-select");
+      const billNameInput = document.getElementById("bill-name");
+      const amountInput = document.getElementById("amount-input");
+      const pageTitle = document.querySelector("h1");
+
       payerSelect.innerHTML = "";
+
+      if (billId) {
+        pageTitle.textContent = "編輯帳單";
+        submitBtn.textContent = "確認修改";
+      }
 
       const context = liff.getContext();
       const userId = context.userId;
@@ -65,6 +75,38 @@ document.addEventListener("DOMContentLoaded", () => {
             payerSelect.appendChild(option);
           });
           payerSelect.value = userId;
+
+          if (billId) {
+            fetch(
+              `https://bot.patrickzzz.com/liff/liff-api.php?action=get_bill_details&groupId=${groupId}&billId=${billId}`
+            )
+              .then((response) => {
+                if (!response.ok) {
+                  // 如果回應不成功，解析 JSON 錯誤訊息並拒絕 Promise
+                  return response.json().then((err) => Promise.reject(err));
+                }
+                return response.json();
+              })
+              .then((billData) => {
+                if (billData && billData.bill) {
+                  const bill = billData.bill;
+                  billNameInput.value = bill.bill_name;
+                  amountInput.value = bill.total_amount;
+                  payerSelect.value = bill.payer_user_id;
+                  bill.participants_user_ids.forEach((participantId) => {
+                    const checkbox = document.getElementById(participantId);
+                    if (checkbox) checkbox.checked = true;
+                  });
+                } else {
+                  throw new Error(
+                    billData.message || "回傳的帳單資料格式不正確。"
+                  );
+                }
+              })
+              .catch((error) =>
+                alert(`載入帳單資料失敗: ${error.message || "發生未知的錯誤"}`)
+              );
+          }
         })
         .catch((error) => {
           console.error("獲取成員名單時發生錯誤:", error);
@@ -79,11 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
           document.querySelectorAll('input[name="participants[]"]:checked')
         ).map((checkbox) => checkbox.value);
 
-        const billNameInput = document.getElementById("bill-name");
         const billName = billNameInput.value;
-        const amountInput = document.getElementById("amount-input");
         const amount = amountInput.value;
-        const payerSelect = document.getElementById("payer-select");
         const payerId = payerSelect.value;
 
         if (!amount || isNaN(amount) || Number(amount) <= 0) {
@@ -91,17 +130,24 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        const action = billId ? "update_bill" : "add_bill";
+        const payload = {
+          action: action,
+          billName: billName,
+          groupId: groupId,
+          payerId: payerId,
+          participants: selectedMembers,
+          amount: Number(amount),
+        };
+
+        if (billId) {
+          payload.billId = billId;
+        }
+
         fetch("https://bot.patrickzzz.com/liff/liff-api.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action:"add_bill",
-            billName: billName,
-            groupId: groupId,
-            payerId: payerId,
-            participants: selectedMembers,
-            amount: Number(amount),
-          }),
+          body: JSON.stringify(payload),
         })
           .then((response) =>
             response.ok
@@ -109,10 +155,18 @@ document.addEventListener("DOMContentLoaded", () => {
               : response.json().then((err) => Promise.reject(err))
           )
           .then((data) => {
-            alert(data.message || "帳單新增成功！");
+            alert(
+              data.message || (billId ? "帳單更新成功！" : "帳單新增成功！")
+            );
             liff.closeWindow();
           })
-          .catch((err) => alert(`新增失敗: ${err.message || "請檢查主控台"}`));
+          .catch((err) =>
+            alert(
+              `${billId ? "更新" : "新增"}失敗: ${
+                err.message || "請檢查主控台"
+              }`
+            )
+          );
       });
     })
     .catch((err) => {

@@ -6,7 +6,7 @@ require_once __DIR__ . '/../models/DbConnection.php';
 
 class BillService
 {
-  public static function createBillSummaryFlexMessage($db, $billId)
+  public static function createBillSummaryFlexMessage($db, $billId, $isUpdate = false)
   {
     $bill = Bill::getBillById($db, $billId);
     if (!$bill) {
@@ -28,6 +28,12 @@ class BillService
     }
     $participantsList = implode(', ', $participantNames);
 
+    $title = $bill['bill_name'];
+    $altText = '新增帳單通知';
+    if ($isUpdate) {
+        $title = "帳單更新: " . $bill['bill_name'];
+        $altText = '帳單已更新';
+    }
     $flexMessage = [
       'type' => 'bubble',
       'body' => [
@@ -36,7 +42,7 @@ class BillService
         'contents' => [
           [
             'type' => 'text',
-            'text' => $bill['bill_name'],
+            'text' => $title,
             'weight' => 'bold',
             'size' => 'xl'
           ],
@@ -60,7 +66,7 @@ class BillService
 
     return [
       'type' => 'flex',
-      'altText' => '新增帳單通知',
+      'altText' => $altText,
       'contents' => $flexMessage
     ];
   }
@@ -269,6 +275,27 @@ class BillService
     }
 
     return $response;
+  }
+  // 獲取單一帳單詳細資訊
+  public static function getBillDetails($db, $billId)
+  {
+      $bill = Bill::getBillById($db, $billId);
+      if (!$bill) {
+          return null;
+      }
+
+      $participants = Participant::getParticipantsByBillId($db, $billId);
+      $participantUserIds = array_map(function($p) {
+          return $p['user_id'];
+      }, $participants);
+
+      return [
+          'bill_id' => (int)$bill['bill_id'],
+          'bill_name' => $bill['bill_name'],
+          'total_amount' => (float)$bill['total_amount'],
+          'payer_user_id' => $bill['payer_user_id'],
+          'participants_user_ids' => $participantUserIds
+      ];
   }
   // 獲取用戶名稱
   private static function getProfilesForUserIds(array $userIds)
