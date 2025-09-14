@@ -2,7 +2,7 @@
 
 這是一個 LINE Bot 專案，旨在提供一個方便的群組分帳功能。使用者可以透過聊天機器人指令以及LIFF (LINE Front-end Framework) 介面來新增、查詢、編輯、刪除及結算帳單。
 
-![QR](https://qr-official.line.me/sid/L/905dkyuv.png)
+![QR](/qrcode.png)
 
 ▲ 掃描 LINE QR 碼，將「分帳小幫手」加為好友，然後邀請它進入群組即可使用。
 
