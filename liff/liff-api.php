@@ -88,6 +88,46 @@ function handleGetRequest() {
             }
             break;
 
+        case 'get_balance_report_liff':
+            $balances = BillService::getFinalBalance($db, $groupId);
+            if (empty($balances)) {
+                echo json_encode(['balances' => [], 'transactions' => []]);
+                return;
+            }
+            $transactions = BillService::calculateSettlementTransactions($balances);
+
+            $userIds = array_keys($balances);
+            foreach ($transactions as $t) {
+                $userIds[] = $t['from'];
+                $userIds[] = $t['to'];
+            }
+            $userIds = array_unique($userIds);
+
+            $profiles = BillService::getProfilesForUserIds($userIds);
+
+            $formattedBalances = [];
+            foreach ($balances as $userId => $balance) {
+                if (abs($balance) > 0.01) {
+                    $formattedBalances[] = [
+                        'userName' => $profiles[$userId]['displayName'] ?? '未知用戶',
+                        'amount' => $balance,
+                    ];
+                }
+            }
+            usort($formattedBalances, fn($a, $b) => $b['amount'] <=> $a['amount']);
+
+            $formattedTransactions = [];
+            foreach ($transactions as $t) {
+                $formattedTransactions[] = [
+                    'from' => $profiles[$t['from']]['displayName'] ?? '未知用戶',
+                    'to' => $profiles[$t['to']]['displayName'] ?? '未知用戶',
+                    'amount' => $t['amount'],
+                ];
+            }
+
+            echo json_encode(['balances' => $formattedBalances, 'transactions' => $formattedTransactions]);
+            break;
+
         default:
             http_response_code(400);
             echo json_encode(['status' => 'error', 'message' => '無效的 GET 操作']);
@@ -147,6 +187,23 @@ function handlePostRequest() {
             } else {
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => '刪除帳單失敗']);
+            }
+            break;
+
+        case 'settle_bills_liff':
+            if (empty($data['groupId'])) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => '缺少群組 ID']);
+                return;
+            }
+            // BillService::settleBills returns the number of affected rows.
+            $affectedRows = BillService::settleBills($db, $data['groupId']);
+            
+            if ($affectedRows >= 0) {
+                echo json_encode(['status' => 'success', 'message' => '帳單已成功結算']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => '結算帳單失敗']);
             }
             break;
 

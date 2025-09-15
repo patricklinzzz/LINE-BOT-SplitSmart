@@ -31,8 +31,8 @@ class BillService
     $title = $bill['bill_name'];
     $altText = '新增帳單通知';
     if ($isUpdate) {
-        $title = "帳單更新: " . $bill['bill_name'];
-        $altText = '帳單已更新';
+      $title = "帳單更新: " . $bill['bill_name'];
+      $altText = '帳單已更新';
     }
     $flexMessage = [
       'type' => 'bubble',
@@ -133,22 +133,70 @@ class BillService
 
     return 0;
   }
-  //createBalanceReportFlexMessage
-  public static function createBalanceReportFlexMessage($report)
+
+  public static function calculateSettlementTransactions(array $balances)
   {
-    $contents = [];
-    // $hasBalance = false;
-    foreach ($report as $userId => $balances) {
-      // 忽略餘額為零的使用者，避免訊息冗長
-      // if (abs($balances) > 0.01) {
-        // $hasBalance = true;
+    $debtors = [];
+    $creditors = [];
+
+    // 1. 將用戶分為債務人（應付）和債權人（應收）
+    foreach ($balances as $userId => $balance) {
+      if ($balance < -0.01) { // 使用小數誤差範圍以處理浮點數
+        $debtors[$userId] = $balance;
+      } elseif ($balance > 0.01) {
+        $creditors[$userId] = $balance;
+      }
+    }
+
+    // 排序以獲得一致的交易建議（非必要，但有助於測試和可預測性）
+    arsort($creditors); // 應收金額多的人優先
+    asort($debtors);   // 應付金額多的人優先
+
+    $transactions = [];
+
+    // 2. 進行結算匹配
+    while (!empty($debtors) && !empty($creditors)) {
+      $debtorId = key($debtors);
+      $debtorAmount = $debtors[$debtorId];
+
+      $creditorId = key($creditors);
+      $creditorAmount = $creditors[$creditorId];
+
+      $transferAmount = min(abs($debtorAmount), $creditorAmount);
+
+      $transactions[] = [
+        'from' => $debtorId,
+        'to' => $creditorId,
+        'amount' => $transferAmount
+      ];
+
+      // 更新餘額
+      $debtors[$debtorId] += $transferAmount;
+      $creditors[$creditorId] -= $transferAmount;
+
+      // 移除已結清的用戶
+      if (abs($debtors[$debtorId]) < 0.01) unset($debtors[$debtorId]);
+      if (abs($creditors[$creditorId]) < 0.01) unset($creditors[$creditorId]);
+    }
+
+    return $transactions;
+  }
+  //createBalanceReportFlexMessage
+  public static function createBalanceReportFlexMessage($balances, $transactions = [])
+  {
+    $balanceContents = [];
+    $hasBalance = false;
+    foreach ($balances as $userId => $balance) {
+      // 忽略餘額為零的使用者
+      if (abs($balance) > 0.01) {
+        $hasBalance = true;
         $profile = MessageHandler::getProfile($userId);
         $userName = $profile['displayName'] ?? '未知用戶';
-        $color = $balances > 0 ? '#1DB446' : '#EF4444';
-        $sign = $balances > 0 ? '應收' : '應付';
-        $amount = abs($balances);
+        $color = $balance > 0 ? '#1DB446' : '#EF4444';
+        $sign = $balance > 0 ? '應收' : '應付';
+        $amount = abs($balance);
 
-        $contents[] = [
+        $balanceContents[] = [
           'type' => 'box',
           'layout' => 'horizontal',
           'contents' => [
@@ -157,19 +205,57 @@ class BillService
             ['type' => 'text', 'text' => '$' . number_format($amount, 2), 'align' => 'end', 'color' => $color, 'weight' => 'bold', 'flex' => 2]
           ]
         ];
-        $contents[] = ['type' => 'separator', 'margin' => 'sm'];
-      // }
+        $balanceContents[] = ['type' => 'separator', 'margin' => 'sm'];
+      }
     }
 
-    // 如果有餘額，移除最後一條分隔線
-    // if ($hasBalance) {
-    //   array_pop($contents);
-    // } else {
-    //   $contents[] = ['type' => 'text', 'text' => '目前沒有待結算的帳單。', 'align' => 'center'];
-    // }
+    if ($hasBalance) {
+      array_pop($balanceContents);
+    } else {
+      $balanceContents[] = ['type' => 'text', 'text' => '目前沒有待結算的帳單。', 'align' => 'center'];
+    }
+
+    // 建立轉帳建議區塊
+    $transactionContents = [];
+    if (!empty($transactions)) {
+      $transactionContents[] = ['type' => 'separator', 'margin' => 'xl'];
+      $transactionContents[] = [
+        'type' => 'text',
+        'text' => '💡 轉帳建議',
+        'weight' => 'bold',
+        'size' => 'lg',
+        'margin' => 'lg',
+        'color' => '#555555'
+      ];
+
+      $userIds = [];
+      foreach ($transactions as $t) {
+        $userIds[$t['from']] = true;
+        $userIds[$t['to']] = true;
+      }
+      $profiles = self::getProfilesForUserIds(array_keys($userIds));
+
+      foreach ($transactions as $transaction) {
+        $fromName = $profiles[$transaction['from']]['displayName'] ?? '未知用戶';
+        $toName = $profiles[$transaction['to']]['displayName'] ?? '未知用戶';
+        $amount = number_format($transaction['amount'], 2);
+
+        $transactionContents[] = [
+          'type' => 'box',
+          'layout' => 'horizontal',
+          'margin' => 'md',
+          'contents' => [
+            ['type' => 'text', 'text' => $fromName, 'gravity' => 'center', 'flex' => 3, 'wrap' => true, 'size' => 'sm'],
+            ['type' => 'text', 'text' => '→', 'gravity' => 'center', 'flex' => 1, 'align' => 'center', 'color' => '#aaaaaa'],
+            ['type' => 'text', 'text' => $toName, 'gravity' => 'center', 'flex' => 3, 'wrap' => true, 'size' => 'sm'],
+            ['type' => 'text', 'text' => '$' . $amount, 'gravity' => 'center', 'flex' => 3, 'align' => 'end', 'weight' => 'bold', 'color' => '#111111']
+          ]
+        ];
+      }
+    }
 
     $buttons = [];
-    if (!empty($report)) {
+    if ($hasBalance) {
       $buttons[] = [
         'type' => 'button',
         'style' => 'link',
@@ -178,7 +264,6 @@ class BillService
           'type' => 'postback',
           'label' => '✔️ 確認結算並清除紀錄',
           'data' => 'settle_up',
-          'displayText' => '所有帳單已成功結清！'
         ]
       ];
     }
@@ -193,7 +278,8 @@ class BillService
             ['type' => 'text', 'text' => '💰 結算報告', 'weight' => 'bold', 'size' => 'xl'],
             ['type' => 'separator', 'margin' => 'md']
           ],
-          $contents
+          $balanceContents,
+          $transactionContents
         )
       ],
       'footer' => [
@@ -218,9 +304,10 @@ class BillService
     $stmt->bind_param("s", $groupId);
     $stmt->execute();
 
+    $affected_rows = $stmt->affected_rows;
     $stmt->close();
 
-    return $stmt->affected_rows;
+    return $affected_rows;
   }
   //獲取群組帳單
   public static function getBillsForGroup($db, $groupId)
@@ -251,7 +338,7 @@ class BillService
       }
       if ($row['participant_user_id']) {
         $bills[$billId]['participants_user_ids'][] = $row['participant_user_id'];
-        $userIds[$row['participant_user_id']] = true; 
+        $userIds[$row['participant_user_id']] = true;
       }
     }
     $stmt->close();
@@ -279,26 +366,26 @@ class BillService
   // 獲取單一帳單詳細資訊
   public static function getBillDetails($db, $billId)
   {
-      $bill = Bill::getBillById($db, $billId);
-      if (!$bill) {
-          return null;
-      }
+    $bill = Bill::getBillById($db, $billId);
+    if (!$bill) {
+      return null;
+    }
 
-      $participants = Participant::getParticipantsByBillId($db, $billId);
-      $participantUserIds = array_map(function($p) {
-          return $p['user_id'];
-      }, $participants);
+    $participants = Participant::getParticipantsByBillId($db, $billId);
+    $participantUserIds = array_map(function ($p) {
+      return $p['user_id'];
+    }, $participants);
 
-      return [
-          'bill_id' => (int)$bill['bill_id'],
-          'bill_name' => $bill['bill_name'],
-          'total_amount' => (float)$bill['total_amount'],
-          'payer_user_id' => $bill['payer_user_id'],
-          'participants_user_ids' => $participantUserIds
-      ];
+    return [
+      'bill_id' => (int)$bill['bill_id'],
+      'bill_name' => $bill['bill_name'],
+      'total_amount' => (float)$bill['total_amount'],
+      'payer_user_id' => $bill['payer_user_id'],
+      'participants_user_ids' => $participantUserIds
+    ];
   }
   // 獲取用戶名稱
-  private static function getProfilesForUserIds(array $userIds)
+  public static function getProfilesForUserIds(array $userIds)
   {
     $profiles = [];
     foreach ($userIds as $userId) {

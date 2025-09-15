@@ -88,12 +88,122 @@
     .btn-delete {
       background-color: #e74c3c;
     }
+
+    #btn-settle-all {
+      background-color: #00a8a8;
+      /* Same as settle button in Flex Message */
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+      font-weight: bold;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 25% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .modal-content h3 {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    #report-balances div,
+    #report-transactions div {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 2px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    #report-balances div:last-child,
+    #report-transactions div:last-child {
+      border-bottom: none;
+    }
+
+    .modal-actions {
+      text-align: right;
+      margin-top: 20px;
+    }
+
+    .modal-actions button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #btn-confirm-settle {
+      background-color: #00a8a8;
+      color: white;
+      margin-left: 10px;
+    }
+
+    #btn-cancel-settle {
+      background-color: #ccc;
+      color: #333;
+    }
+
+    #btn-confirm-settle:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
     <h1>歷史帳單紀錄</h1>
+    <div id="settle-container" style="text-align: center; margin-bottom: 20px; display: none;">
+      <button id="btn-settle-all">✔️ 結算所有帳單</button>
+    </div>
     <div id="loading">載入中...</div>
     <div class="table-container">
       <table class="bill-table" style="display:none;">
@@ -110,6 +220,23 @@
       </table>
     </div>
     <div id="no-bills" style="display:none;">目前沒有任何未結算的帳單。</div>
+  </div>
+
+  <div id="settle-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>結算報告預覽</h2>
+      <div id="report-balances">
+        <!-- Balance items will be injected here -->
+      </div>
+      <div id="report-transactions" style="margin-top: 20px;">
+        <!-- Transaction items will be injected here -->
+      </div>
+      <div class="modal-actions">
+        <button id="btn-cancel-settle">取消</button>
+        <button id="btn-confirm-settle">確認結算</button>
+      </div>
+    </div>
   </div>
 
   <script src="liff-check_bill.js" defer></script>

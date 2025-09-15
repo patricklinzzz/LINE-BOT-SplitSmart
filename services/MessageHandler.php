@@ -197,18 +197,15 @@ class MessageHandler
       case 'get_balance':
         try {
           $db = DbConnection::getInstance();
-          $report = BillService::getFinalBalance($db, $groupId);
+          $balances = BillService::getFinalBalance($db, $groupId);
 
-          // 檢查是否有帳務資料可供結算
-          // if (empty($report['balances']) && empty($report['transactions'])) {
-          //   return [
-          //     'type' => 'text',
-          //     'text' => '目前沒有任何帳單可以結算。'
-          //   ];
-          // }
+          // 如果沒有任何待結算餘額，直接回傳訊息
+          if (empty($balances)) {
+            return ['type' => 'text', 'text' => '目前沒有任何帳單可以結算。'];
+          }
 
-          // 產生結算報告 Flex Message
-          $reportMessage = BillService::createBalanceReportFlexMessage($report);
+          $transactions = BillService::calculateSettlementTransactions($balances);
+          $reportMessage = BillService::createBalanceReportFlexMessage($balances, $transactions);
           return $reportMessage;
         } catch (Exception $e) {
           error_log('Error in get_balance postback: ' . $e->getMessage());
