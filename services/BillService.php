@@ -312,7 +312,7 @@ class BillService
   //獲取群組帳單
   public static function getBillsForGroup($db, $groupId)
   {
-    $sql = "SELECT b.bill_id, b.bill_name, b.total_amount, b.payer_user_id, p.user_id AS participant_user_id
+    $sql = "SELECT b.bill_id, b.bill_name, b.total_amount, b.payer_user_id, b.created_at, p.user_id AS participant_user_id
             FROM bills b
             LEFT JOIN bill_participants p ON b.bill_id = p.bill_id
             WHERE b.group_id = ? AND b.is_settled = FALSE
@@ -332,6 +332,7 @@ class BillService
           'bill_name' => $row['bill_name'],
           'total_amount' => $row['total_amount'],
           'payer_user_id' => $row['payer_user_id'],
+          'created_at' => $row['created_at'],
           'participants_user_ids' => []
         ];
         $userIds[$row['payer_user_id']] = true;
@@ -357,7 +358,8 @@ class BillService
         'bill_name' => $bill['bill_name'],
         'total_amount' => $bill['total_amount'],
         'payer_name' => $profiles[$bill['payer_user_id']]['displayName'] ?? '未知用戶',
-        'participants_names' => $participantNames
+        'participants_names' => $participantNames,
+        'created_at' => $bill['created_at']
       ];
     }
 

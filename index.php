@@ -35,6 +35,9 @@ foreach ($request['events'] as $event) {
   } else if ($event['type'] == 'postback') {
     $postbackData = $event['postback']['data'];
     $replyMessage = MessageHandler::handlePostback($postbackData, $groupId, $userId);
+  } else if ($event['type'] == 'join') {
+    MessageHandler::handleJoinEvent($groupId);
+    // Join events don't have a reply token.
   }
 
   if (!empty($replyMessage) && (isset($replyMessage['type']))) {

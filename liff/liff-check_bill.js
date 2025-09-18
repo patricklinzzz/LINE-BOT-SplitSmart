@@ -93,7 +93,10 @@ function fetchBills(groupId, userId) {
             )}</small><br>
             <small class="participants">參與者: ${escapeHtml(
               bill.participants_names.join(", ")
-            )}</small>
+            )}</small><br>
+            <small class="participants">建立於: ${new Date(
+              bill.created_at + " UTC"
+            ).toLocaleString()}</small>
           </td>
           <td>$${Number(bill.total_amount).toLocaleString()}</td>
           <td class="actions">

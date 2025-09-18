@@ -13,6 +13,7 @@ class DbConnection
     try {
       $this->conn = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
       $this->conn->set_charset("utf8mb4");
+      // $this->conn->query("SET time_zone = '+8:00';");
     } catch (mysqli_sql_exception $e) {
       error_log("Database Connection Error: " . $e->getMessage());
       throw new Exception("無法連接到資料庫，請檢查設定或稍後再試。");

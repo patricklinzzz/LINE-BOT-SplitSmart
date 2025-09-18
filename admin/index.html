@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台管理 - 所有帳單</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f7f6;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    #login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 40px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    #login-container h1 {
+      margin-top: 0;
+    }
+
+    #password-input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    #username-input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    #login-form button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #login-form button:hover {
+      background-color: #2980b9;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      margin-top: 10px;
+      height: 1em;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #logout-btn {
+      padding: 8px 15px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #logout-btn:hover {
+      background-color: #c0392b;
+    }
+
+    #loading {
+      text-align: center;
+      font-size: 1.2em;
+      padding: 40px;
+    }
+
+    #whitelist-container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      padding: 20px;
+    }
+
+    .whitelist-toggle {
+      display: flex;
+      align-items: center;
+      font-size: 1.2em;
+      margin-bottom: 20px;
+    }
+
+    .whitelist-toggle input {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    .whitelist-section h3 { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;}
+
+    .group-container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .group-header {
+      background-color: #34495e;
+      color: #ecf0f1;
+      padding: 15px 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .group-header code {
+      background-color: #2c3e50;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .group-header {
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      /* Prevent text selection on click */
+    }
+
+    .group-header::after {
+      content: '−';
+      /* Minus sign */
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .group-container.collapsed .group-header::after {
+      content: '+';
+      /* Plus sign */
+    }
+
+    .group-container.collapsed .bill-table {
+      display: none;
+    }
+
+    .bill-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .bill-table th,
+    .bill-table td {
+      padding: 12px 20px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .bill-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    .bill-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .bill-table tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .status-settled {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .status-unsettled {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .participants {
+      font-size: 0.9em;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="login-container">
+    <h1>後台管理登入</h1>
+    <form id="login-form" onsubmit="return false;">
+      <input type="text" id="username-input" placeholder="請輸入帳號" required>
+      <input type="password" id="password-input" placeholder="請輸入密碼" required>
+      <button type="submit">登入</button>
+    </form>
+    <p id="login-error" class="error-message"></p>
+  </div>
+
+  <div id="main-content" style="display: none;">
+    <div class="header-bar">
+      <h1>後台管理 - 所有帳單</h1>
+      <button id="logout-btn">登出</button>
+    </div>
+    <div id="app-container">
+      <div id="loading">載入中...</div>
+    </div>
+
+    <div id="whitelist-container" style="display: none;">
+      <h2>白名單管理</h2>
+      <div class="whitelist-toggle">
+        <input type="checkbox" id="whitelist-enabled-toggle">
+        <label for="whitelist-enabled-toggle">啟用群組白名單功能</label>
+      </div>
+      <div class="whitelist-section" id="unregistered-groups">
+        <h3>現存活躍群組 (未註冊)</h3>
+      </div>
+      <div class="whitelist-section" id="pending-groups">
+        <h3>待審核群組</h3>
+      </div>
+      <div class="whitelist-section" id="approved-groups">
+        <h3>已核准群組</h3>
+      </div>
+      <div class="whitelist-section" id="denied-groups">
+        <h3>已拒絕群組</h3>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+
+</html>
